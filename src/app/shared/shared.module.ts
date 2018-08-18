@@ -6,6 +6,7 @@ import {
   MatToolbarModule,
   MatFormFieldModule,
   MatInputModule,
+  MatProgressSpinnerModule,
   MatButtonModule,
   MatSnackBarModule
 }
@@ -20,6 +21,7 @@ import {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatSnackBarModule
   ]
