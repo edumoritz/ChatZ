@@ -1,13 +1,17 @@
-import { AuthService } from './../../../core/services/auth.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
+import { takeWhile } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material';
+
+import { ErrorService } from './../../../core/services/error.service';
+import { AuthService } from './../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
 
   loginForm: FormGroup;
   configs = {
@@ -18,9 +22,13 @@ export class LoginComponent implements OnInit {
   private nameControl =
           new FormControl('', [Validators.required, Validators.minLength(5)]);
 
+  private alive = true;
+
   constructor(
     private authService: AuthService,
-    private formBuilder: FormBuilder
+    private errorService: ErrorService,
+    private formBuilder: FormBuilder,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit() {
@@ -42,9 +50,19 @@ export class LoginComponent implements OnInit {
         : this.authService.signupUser(this.loginForm.value);
 
 
-    operation.subscribe(res => {
-      console.log('redirecting...', res);
-    });
+    operation
+      .pipe(
+        takeWhile(() => this.alive)
+      ).subscribe(
+        res => {
+          console.log('redirecting...', res);
+        },
+        err => {
+          console.log(err);
+          this.snackBar.open(this.errorService.getErrorMessage(err), 'Done', {duration: 5000, verticalPosition: 'top'});
+        },
+        () => console.log('Observable Completed!')
+      );
 
   }
 
@@ -58,4 +76,8 @@ export class LoginComponent implements OnInit {
   get name(): FormControl { return <FormControl> this.loginForm.get('name'); }
   get email(): FormControl { return <FormControl> this.loginForm.get('email'); }
   get password(): FormControl { return <FormControl> this.loginForm.get('password'); }
+
+  ngOnDestroy(): void {
+    this.alive = false;
+  }
 }
