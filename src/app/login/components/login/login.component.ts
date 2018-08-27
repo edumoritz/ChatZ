@@ -60,6 +60,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       ).subscribe(
         res => {
           console.log('redirecting...', res);
+          //se tiver url no authservice utiliza senao retorna dashboard
+          const redirect: string = this.authService.redirectUrl || '/dashboard';
+          // redirect with router
+          console.log('route to redirect: ', redirect)
+          this.authService.redirectUrl = null;
           this.configs.isLoading = false;
         },
         err => {
