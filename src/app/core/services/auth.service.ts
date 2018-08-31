@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
+import { StorageKeys } from '../../storage-keys';
 
 @Injectable({
   providedIn: 'root'
@@ -10,23 +11,17 @@ import { Apollo } from 'apollo-angular';
 export class AuthService {
 
   redirectUrl: string;
+  keepSigned: boolean;
   private _isAuthenticated = new ReplaySubject<boolean>(1);
 
   constructor(
     private apollo: Apollo
   ) {
-    //Testes
-    // this.isAuthenticated.subscribe(res => {
-    //   console.log('AuthState', res); // aguarda next ser chamado
-    // });
-
-    // let authState = false;
-    // setInterval(() => {
-    //   this._isAuthenticated.next(authState);
-    //   authState = !authState;
-    // }, 5000);
-
     this.isAuthenticated.subscribe(is => console.log('AuthState', is));
+    this.init();
+  }
+  init(): void {
+    this.keepSigned = JSON.parse(window.localStorage.getItem(StorageKeys.KEEP_SIGNED));
 
   }
 
@@ -40,9 +35,9 @@ export class AuthService {
       variables
     }).pipe(
       map(res => res.data.authenticateUser),
-      tap(res => this.setAuthState(res !== null)), //executa logica no retorno do map
+      tap(res => this.setAuthState({token: res && res.token, isAuthenticated: res !== null})), //executa logica no retorno do map
       catchError(err => {
-        this.setAuthState(false);
+        this.setAuthState({token: null, isAuthenticated: false});
         return throwError(err);
       })
     );
@@ -54,15 +49,23 @@ export class AuthService {
       variables
     }).pipe(
       map(res => res.data.signupUser),
-      tap(res => this.setAuthState(res !== null)),
+      tap(res => this.setAuthState({token: res && res.token, isAuthenticated: res !== null})),
       catchError(err => {
-        this.setAuthState(false);
+        this.setAuthState({token: null, isAuthenticated: false});
         return throwError(err);
       })
     );
   }
 
-  private setAuthState(isAuthenticated: boolean): void {
-    this._isAuthenticated.next(isAuthenticated);
+  toggleKeepSigned(): void {
+    this.keepSigned = !this.keepSigned;
+    window.localStorage.setItem(StorageKeys.KEEP_SIGNED, this.keepSigned.toString());
+  }
+
+  private setAuthState(authData: {token: string, isAuthenticated: boolean}): void {
+    if(authData.isAuthenticated){
+      window.localStorage.setItem(StorageKeys.AUTH_TOKEN, authData.token);
+    }
+    this._isAuthenticated.next(authData.isAuthenticated);
   }
 }
