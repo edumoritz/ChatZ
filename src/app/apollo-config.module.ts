@@ -1,5 +1,6 @@
+import { StorageKeys } from './storage-keys';
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpHeaders } from '@angular/common/http';
 
 import { Apollo, ApolloModule } from 'apollo-angular';
 import { HttpLink, HttpLinkModule } from 'apollo-angular-link-http';
@@ -25,6 +26,17 @@ export class ApolloConfigModule {
     const uri = 'https://api.graph.cool/simple/v1/cjjvh1vsj4hmv0103v1r5282g';
     const http = httpLink.create({ uri });
 
+    const authMiddleware: ApolloLink = new ApolloLink((operation, forward) => {
+
+      operation.setContext({
+        headers: new HttpHeaders({
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        })
+      })
+
+      return forward(operation);
+    })
+
     const linkError = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
         graphQLErrors.map(({ message, locations, path }) =>
@@ -39,10 +51,14 @@ export class ApolloConfigModule {
     apollo.create({
       link: ApolloLink.from([
         linkError,
-        http
+        authMiddleware.concat(http)
       ]),
       cache: new InMemoryCache(),
       connectToDevTools: !environment.production
     });
+  }
+
+  private getAuthToken(): string {
+    return window.localStorage.getItem(StorageKeys.AUTH_TOKEN);
   }
 }
