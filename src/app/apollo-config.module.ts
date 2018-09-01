@@ -24,6 +24,7 @@ export class ApolloConfigModule {
     private httpLink: HttpLink
   ) {
     const uri = 'https://api.graph.cool/simple/v1/cjjvh1vsj4hmv0103v1r5282g';
+
     const http = httpLink.create({ uri });
 
     const authMiddleware: ApolloLink = new ApolloLink((operation, forward) => {
