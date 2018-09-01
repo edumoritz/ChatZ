@@ -7,7 +7,7 @@ export interface LoggedInUserQuery {
 
 export const LOGGED_IN_USER_QUERY = gql`
   query LoggedInUserQuery {
-    LoggedInUserQuery {
+    loggedInUser {
       id
     }
   }
