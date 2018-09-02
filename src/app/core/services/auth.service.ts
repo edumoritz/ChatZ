@@ -8,7 +8,9 @@ import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, throwError, of } from 'rxjs';
 import { map, tap, catchError, mergeMap } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
+import { Base64 } from 'js-base64';
 import { StorageKeys } from '../../storage-keys';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -17,16 +19,19 @@ export class AuthService {
 
   redirectUrl: string;
   keepSigned: boolean;
+  rememberMe: boolean;// opcional
   private _isAuthenticated = new ReplaySubject<boolean>(1);
 
   constructor(
-    private apollo: Apollo
+    private apollo: Apollo,
+    private router: Router
   ) {
     this.isAuthenticated.subscribe(is => console.log('AuthState', is));
     this.init();
   }
   init(): void {
     this.keepSigned = JSON.parse(window.localStorage.getItem(StorageKeys.KEEP_SIGNED));
+    this.rememberMe = JSON.parse(window.localStorage.getItem(StorageKeys.REMEMBER_ME));// opcional
   }
 
   get isAuthenticated(): Observable<boolean> {
@@ -64,6 +69,39 @@ export class AuthService {
   toggleKeepSigned(): void {
     this.keepSigned = !this.keepSigned;
     window.localStorage.setItem(StorageKeys.KEEP_SIGNED, this.keepSigned.toString());
+  }
+
+  toggleRememberMe(): void { // opcional
+    this.rememberMe = !this.rememberMe;
+    window.localStorage.setItem(StorageKeys.REMEMBER_ME, this.rememberMe.toString());
+    if(!this.rememberMe) {
+      window.localStorage.removeItem(StorageKeys.USER_EMAIL);
+      window.localStorage.removeItem(StorageKeys.USER_PASSWORD);
+    }
+  }
+
+  setRememberMe(user: { email: string, password: string }): void {
+    if(this.rememberMe) {
+      window.localStorage.setItem(StorageKeys.USER_EMAIL, Base64.encode(user.email));
+      window.localStorage.setItem(StorageKeys.USER_PASSWORD, Base64.encode(user.password));
+    }
+  }
+
+  getRememberMe(): { email: string, password: string } {
+    if(!this.rememberMe) { return null; }
+    return {
+      email: Base64.decode(window.localStorage.getItem(StorageKeys.USER_EMAIL)),
+      password: Base64.decode(window.localStorage.getItem(StorageKeys.USER_PASSWORD))
+    };
+  }
+
+  logout(): void {
+    window.localStorage.removeItem(StorageKeys.AUTH_TOKEN);
+    window.localStorage.removeItem(StorageKeys.KEEP_SIGNED);
+    this.keepSigned = false;
+    this._isAuthenticated.next(false);
+    this.router.navigate(['/login']);
+    this.apollo.getClient().resetStore();
   }
 
   autoLogin(): Observable<void> {

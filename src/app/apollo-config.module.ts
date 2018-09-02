@@ -1,5 +1,6 @@
+import { GRAPHCOOL_CONFIG, graphcoolConfig, GraphcoolConfig } from './core/providers/graphcool-config.provider';
 import { StorageKeys } from './storage-keys';
-import { NgModule } from '@angular/core';
+import { NgModule, Inject } from '@angular/core';
 import { HttpClientModule, HttpHeaders } from '@angular/common/http';
 
 import { Apollo, ApolloModule } from 'apollo-angular';
@@ -21,9 +22,10 @@ export class ApolloConfigModule {
 
   constructor(
     private apollo: Apollo,
+    @Inject(GRAPHCOOL_CONFIG) private graphcoolConfig: GraphcoolConfig,
     private httpLink: HttpLink
   ) {
-    const uri = 'https://api.graph.cool/simple/v1/cjjvh1vsj4hmv0103v1r5282g';
+    const uri = this.graphcoolConfig.simpleAPI;
 
     const http = httpLink.create({ uri });
 
