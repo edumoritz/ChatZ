@@ -12,7 +12,8 @@ import {
   MatSlideToggleModule,
   MatListModule,
   MatIconModule,
-  MatLineModule
+  MatLineModule,
+  MatSidenavModule
 }
   from '@angular/material';
 
@@ -28,6 +29,7 @@ import {
     MatIconModule,
     MatLineModule,
     MatListModule,
+    MatSidenavModule,
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatSlideToggleModule,
