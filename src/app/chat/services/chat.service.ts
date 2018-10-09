@@ -1,5 +1,5 @@
+import { ChatModule } from './../chat.module';
 import { AllChatsQuery, USER_CHATS_QUERY } from './chat.graphql';
-import { ChatModule } from '../chat.module';
 import { Injectable } from '@angular/core';
 import { Chat } from '../models/chat.model';
 import { Observable } from 'rxjs';

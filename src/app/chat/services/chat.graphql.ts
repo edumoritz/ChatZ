@@ -40,4 +40,5 @@ export const USER_CHATS_QUERY = gql`
         }
       }
     }
+  }
 `

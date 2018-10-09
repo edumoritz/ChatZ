@@ -29,7 +29,8 @@ export class ChatListComponent implements OnInit {
   getLastMessage(chat: Chat): string {
     const message = chat.messages[0];
     if(message) {
-      const sender = (message.sender.id === this.authService.authUser.id)
+      const sender =
+        (message.sender.id === this.authService.authUser.id)
           ? 'You'
           : message.sender.name;
       return `${sender}: ${message.text}`;
