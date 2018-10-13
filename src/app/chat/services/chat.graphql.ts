@@ -73,7 +73,7 @@ export const CHAT_BY_ID_OR_BY_USERS_QUERY = gql`
       filter: {
         AND: [
           { users_some: { id: $loggedUserId } },
-          { users_some: { id: $loggedUserId } }
+          { users_some: { id: $targetUserId } }
         ],
         isGroup: false
       }
