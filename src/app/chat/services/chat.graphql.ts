@@ -37,6 +37,7 @@ export const USER_CHATS_QUERY = gql`
         last: 1
       ) {
         id
+        createdAt
         text
         sender {
           id
@@ -92,6 +93,44 @@ export const CHAT_BY_ID_OR_BY_USERS_QUERY = gql`
         name
         email
         createdAt
+      }
+    }
+  }
+`;
+
+export const CREATE_PRIVATE_CHAT_MUTATION = gql`
+  mutation CreatePrivateChatMutation($loggedUserId: ID!, $targetUserId: ID!){
+    createChat(
+      usersIds: [
+        $loggedUserId,
+        $targetUserId
+      ]
+    ) {
+      id
+      title
+      createdAt
+      isGroup
+      users(
+        first: 1
+        filter: {
+          id_not: $loggedUserId
+        }
+      ) {
+        id
+        name
+        email
+        createdAt
+      }
+      messages(
+        last: 1
+      ) {
+        id
+        createdAt
+        text
+        sender {
+          id
+          name
+        }
       }
     }
   }
