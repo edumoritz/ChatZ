@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import {
   MatCardModule,
   MatToolbarModule,
@@ -29,6 +29,7 @@ import { NoRecordComponent } from './components/no-record/no-record.component';
   ],
   exports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatToolbarModule,
     MatFormFieldModule,
