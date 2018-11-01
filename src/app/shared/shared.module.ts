@@ -18,16 +18,20 @@ import {
 }
   from '@angular/material';
 import { NoRecordComponent } from './components/no-record/no-record.component';
+import { AvatarComponent } from './components/avatar/avatar.component';
 
 
 @NgModule({
   declarations: [
-    NoRecordComponent
+    NoRecordComponent,
+    AvatarComponent
   ],
   imports: [
+    CommonModule,
     MatIconModule
   ],
   exports: [
+    AvatarComponent,
     CommonModule,
     FormsModule,
     MatCardModule,
