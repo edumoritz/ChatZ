@@ -1,5 +1,5 @@
-export class BaseComponent<T extends {id: number | string}> {
-  trackByFn(index: number, item: T): number | string {
+export class BaseComponent<T extends {id: string}> {
+  trackByFn(index: number, item: T): string {
     return item.id;
   }
 }
