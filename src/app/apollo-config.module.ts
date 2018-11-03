@@ -1,4 +1,4 @@
-import { GRAPHCOOL_CONFIG, graphcoolConfig, GraphcoolConfig } from './core/providers/graphcool-config.provider';
+import { GRAPHCOOL_CONFIG, GraphcoolConfig } from './core/providers/graphcool-config.provider';
 import { StorageKeys } from './storage-keys';
 import { NgModule, Inject } from '@angular/core';
 import { HttpClientModule, HttpHeaders } from '@angular/common/http';
