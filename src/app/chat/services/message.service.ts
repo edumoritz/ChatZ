@@ -7,6 +7,7 @@ import { Message } from './../models/message.model';
 import { Apollo } from 'apollo-angular';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { DataProxy } from 'apollo-cache';
 
 @Injectable({
   providedIn: 'root'
@@ -18,18 +19,54 @@ export class MessageService {
   ) { }
 
   getChatMessages(chatId: string): Observable<Message[]> {
-    return this.apollo.query<AllMessagesQuery>({
+
+    return this.apollo.watchQuery<AllMessagesQuery>({
       query: GET_CHAT_MESSAGES_QUERY,
-      variables: { chatId }
-    }).pipe(
-      map(res => res.data.allMessages)
-    )
+      variables: {chatId}
+    }).valueChanges
+      .pipe(
+        map(res => res.data.allMessages)
+      )
   }
 
   createMessage(message: {text: string, chatId: string, senderId: string}): Observable<Message> {
     return this.apollo.mutate({
       mutation: CREATE_MESSAGE_MUTATION,
-      variables: message
+      variables: message,
+      optimisticResponse: {
+        __typename: 'Mutation',
+        createMessage: {
+          __typename: 'Message',
+          id: '',
+          text: message.text,
+          createdAt: new Date().toISOString(),
+          sender: {
+            __typename: 'User',
+            id: message.senderId,
+            name: '',
+            email: '',
+            createdAt: ''
+          },
+          chat: {
+            __typename: 'Chat',
+            id: message.chatId
+          }
+        }
+      },
+      update: (store: DataProxy, {data: { createMessage }}) => {
+        const data = store.readQuery<AllMessagesQuery>({
+          query: GET_CHAT_MESSAGES_QUERY,
+          variables: {chatId: message.chatId}
+        });
+
+        data.allMessages = [...data.allMessages, createMessage];
+
+        store.writeQuery({
+          query: GET_CHAT_MESSAGES_QUERY,
+          variables: {chatId: message.chatId},
+          data
+        });
+      }
     }).pipe(
       map(res => res.data.createMessage)
     );
