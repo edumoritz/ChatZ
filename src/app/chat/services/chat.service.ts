@@ -1,3 +1,4 @@
+import { DataProxy } from 'apollo-cache';
 import { LoggedInUserQuery } from './../../core/services/auth.graphql';
 import { Chat } from './../models/chat.model';
 import {
@@ -25,22 +26,23 @@ export class ChatService {
   ) { }
 
   getUserChats(): Observable<Chat[]> {
-    return this.apollo.query<AllChatsQuery>({
+    return this.apollo.watchQuery<AllChatsQuery>({
       query: USER_CHATS_QUERY,
       variables: {
         loggedUserId: this.authService.authUser.id
       }
-    }).pipe(
-      map(res => res.data.allChats),
-      map((chats: Chat[]) => { // ordenando chats por javascript
-        const chatsToSort= chats.slice();
-          return chatsToSort.sort((a, b) => {
-            const valueA = (a.messages.length > 0) ? new Date(a.messages[0].createdAt).getTime() : new Date(a.createdAt).getTime();
-            const valueB = (b.messages.length > 0) ? new Date(b.messages[0].createdAt).getTime() : new Date(b.createdAt).getTime();
-            return valueB - valueA;
-        });
-      })
-    )
+    }).valueChanges
+      .pipe(
+        map(res => res.data.allChats),
+        map((chats: Chat[]) => { // ordenando chats por javascript
+          const chatsToSort= chats.slice();
+            return chatsToSort.sort((a, b) => {
+              const valueA = (a.messages.length > 0) ? new Date(a.messages[0].createdAt).getTime() : new Date(a.createdAt).getTime();
+              const valueB = (b.messages.length > 0) ? new Date(b.messages[0].createdAt).getTime() : new Date(b.createdAt).getTime();
+              return valueB - valueA;
+          });
+        })
+      )
   }
 
   getChatByIdOrByUsers(chatOrUserId: string): Observable<Chat> {
@@ -62,6 +64,41 @@ export class ChatService {
       variables: {
         loggedUserId: this.authService.authUser.id,
         targetUserId
+      },
+      update: (store: DataProxy, {data: {createChat}}) => {
+
+        const userChatsVariables = { loggedUserId: this.authService.authUser.id };
+
+        const userChatsData = store.readQuery<AllChatsQuery>({
+          query: USER_CHATS_QUERY,
+          variables: userChatsVariables
+        });
+
+        userChatsData.allChats = [createChat, ...userChatsData.allChats];
+
+        store.writeQuery({
+          query: USER_CHATS_QUERY,
+          variables: userChatsVariables,
+          data: userChatsData
+        });
+
+        const variables = {
+          chatId: targetUserId,
+          loggedUserId: this.authService.authUser.id,
+          targetUserId
+        };
+        const data = store.readQuery<AllChatsQuery>({
+          query: CHAT_BY_ID_OR_BY_USERS_QUERY,
+          variables
+        })
+
+        data.allChats = [createChat];
+
+        store.writeQuery({
+          query: CHAT_BY_ID_OR_BY_USERS_QUERY,
+          variables,
+          data
+        });
       }
     }).pipe(
       map(res => res.data.createChat)
