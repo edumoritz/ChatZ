@@ -8,12 +8,12 @@ import {
   CHAT_BY_ID_OR_BY_USERS_QUERY,
   CREATE_PRIVATE_CHAT_MUTATION
 } from './chat.graphql';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
 import { Apollo } from 'apollo-angular';
 import { AuthService } from '../../core/services/auth.service';
 import { map } from 'rxjs/operators';
-import { variable } from '@angular/compiler/src/output/output_ast';
+import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -21,15 +21,22 @@ import { variable } from '@angular/compiler/src/output/output_ast';
 export class ChatService {
 
   chats$: Observable<Chat[]>;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private apollo: Apollo,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) { }
 
   startChatsMonitoring(): void {
     this.chats$ = this.getUserChats();
-    this.chats$.subscribe();
+    this.subscriptions.push(this.chats$.subscribe());
+    this.router.events.subscribe((event: RouterEvent) => {
+      if(event instanceof NavigationEnd && !this.router.url.includes('chat')) {
+        this.onDestroy();
+      }
+    })
   }
 
   getUserChats(): Observable<Chat[]> {
@@ -110,5 +117,10 @@ export class ChatService {
     }).pipe(
       map(res => res.data.createChat)
     );
+  }
+
+  private onDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.subscriptions = [];
   }
 }
