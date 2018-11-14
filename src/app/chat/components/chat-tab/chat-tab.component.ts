@@ -1,3 +1,4 @@
+import { ChatService } from './../../services/chat.service';
 import { Component } from '@angular/core';
 
 @Component({
@@ -28,5 +29,11 @@ import { Component } from '@angular/core';
 })
 export class ChatTabComponent {
 
+  constructor(
+    private chatService: ChatService
+  ) {}
 
+  ngOnInit(): void {
+    this.chatService.startChatsMonitoring();
+  }
 }
