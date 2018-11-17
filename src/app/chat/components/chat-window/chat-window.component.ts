@@ -1,3 +1,4 @@
+import { ChatMessageComponent } from './../chat-message/chat-message.component';
 import { BaseComponent } from './../../../shared/components/base.component';
 import { Chat } from './../../models/chat.model';
 import { ChatService } from './../../services/chat.service';
@@ -6,24 +7,27 @@ import { MessageService } from './../../services/message.service';
 import { Message } from './../../models/message.model';
 import { UserService } from './../../../core/services/user.service';
 import { map, mergeMap, tap, take } from 'rxjs/operators';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ViewChildren, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Subscription, Observable, of } from 'rxjs';
 import { Title } from '@angular/platform-browser';
 import { User } from '../../../core/models/user.model';
+import { QueryList } from '@angular/core/src/render3';
 
 @Component({
   selector: 'app-chat-window',
   templateUrl: './chat-window.component.html',
   styleUrls: ['./chat-window.component.scss']
 })
-export class ChatWindowComponent extends BaseComponent<Message> implements OnDestroy, OnInit {
+export class ChatWindowComponent extends BaseComponent<Message> implements AfterViewInit, OnDestroy, OnInit {
 
   chat: Chat;
   messages$: Observable<Message[]>;
   newMessage = '';
   recipientId: string = null;
   alreadyLoadedMessages = false;
+  @ViewChild('content') private content: ElementRef;
+  @ViewChildren(ChatMessageComponent) private messagesQueryList: QueryList<ChatMessageComponent>;
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -65,6 +69,14 @@ export class ChatWindowComponent extends BaseComponent<Message> implements OnDes
 
   }
 
+  ngAfterViewInit(): void {
+    this.subscriptions.push(
+      this.messagesQueryList.changes.subscribe(() => {
+        this.scrollToBottom('smooth');
+      })
+    );
+  }
+
   private createPrivateChat(): void {
     this.chatService.createPrivateChat(this.recipientId)
       .pipe(
@@ -74,6 +86,12 @@ export class ChatWindowComponent extends BaseComponent<Message> implements OnDes
           this.sendMessage();
         })
       ).subscribe();
+  }
+
+  private scrollToBottom(behavior: string = 'auto', block: string = 'end'): void {
+    setTimeout(() => {
+      this.content.nativeElement.scrollIntoView({ behavior, block });
+    }, 0);
   }
 
   sendMessage(): void {
