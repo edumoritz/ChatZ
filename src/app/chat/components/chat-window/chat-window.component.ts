@@ -7,12 +7,19 @@ import { MessageService } from './../../services/message.service';
 import { Message } from './../../models/message.model';
 import { UserService } from './../../../core/services/user.service';
 import { map, mergeMap, tap, take } from 'rxjs/operators';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ViewChildren, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Subscription, Observable, of } from 'rxjs';
 import { Title } from '@angular/platform-browser';
 import { User } from '../../../core/models/user.model';
-import { QueryList } from '@angular/core/src/render3';
+import { Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  ViewChildren,
+  AfterViewInit,
+  QueryList
+} from '@angular/core';
 
 @Component({
   selector: 'app-chat-window',
