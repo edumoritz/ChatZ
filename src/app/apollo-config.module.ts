@@ -11,6 +11,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from '../environments/environment';
 import { ApolloLink, Operation } from '../../node_modules/apollo-link';
 import { getOperationAST } from 'graphql';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 @NgModule({
   imports: [
@@ -21,6 +22,7 @@ import { getOperationAST } from 'graphql';
 })
 export class ApolloConfigModule {
 
+  private subscriptionClient: SubscriptionClient;
 
   constructor(
     private apollo: Apollo,
@@ -57,9 +59,16 @@ export class ApolloConfigModule {
       uri: this.graphcoolConfig.subscriptionsAPI,
       options: {
         reconnect: true,
-        timeout: 30000
+        timeout: 30000,
+        connectionParams: () => {
+          return {
+            'Authorization': `Bearer ${this.getAuthToken()}`
+          };
+        }
       }
     });
+
+    this.subscriptionClient = (<any>ws).subscriptionClient;
 
     const cache = new InMemoryCache();
 
@@ -85,6 +94,10 @@ export class ApolloConfigModule {
       cache,
       connectToDevTools: !environment.production
     });
+  }
+
+  closeWebSocketConnection(): void {
+    this.subscriptionClient.close(true, true);
   }
 
   private getAuthToken(): string {

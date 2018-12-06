@@ -1,3 +1,4 @@
+import { ApolloConfigModule } from './../../apollo-config.module';
 import {
   AUTHENTICATE_USER_MUTATION,
   SIGNUP_USER_MUTATION,
@@ -26,6 +27,7 @@ export class AuthService {
 
   constructor(
     private apollo: Apollo,
+    private apolloConfigModule: ApolloConfigModule,
     private router: Router
   ) {
     this.isAuthenticated.subscribe(is => console.log('AuthState', is));
@@ -98,6 +100,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.apolloConfigModule.closeWebSocketConnection();
     window.localStorage.removeItem(StorageKeys.AUTH_TOKEN);
     window.localStorage.removeItem(StorageKeys.KEEP_SIGNED);
     this.keepSigned = false;
@@ -141,10 +144,13 @@ export class AuthService {
     );
   }
 
-  private setAuthState(authData: {id: string, token: string, isAuthenticated: boolean}): void {
+  private setAuthState(authData: {id: string, token: string, isAuthenticated: boolean}, isRefresh: boolean = false): void {
     if(authData.isAuthenticated){
       window.localStorage.setItem(StorageKeys.AUTH_TOKEN, authData.token);
       this.authUser = {id: authData.id};
+      if(!isRefresh) {
+        this.apolloConfigModule.closeWebSocketConnection();
+      }
     }
     this._isAuthenticated.next(authData.isAuthenticated);
   }
