@@ -1,5 +1,6 @@
+import { Message } from './../models/message.model';
+import { USER_MESSAGES_SUBSCRIPTION } from './message.graphql';
 import { DataProxy } from 'apollo-cache';
-import { LoggedInUserQuery } from './../../core/services/auth.graphql';
 import { Chat } from './../models/chat.model';
 import {
   AllChatsQuery,
@@ -10,7 +11,7 @@ import {
 } from './chat.graphql';
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { Apollo } from 'apollo-angular';
+import { Apollo, QueryRef } from 'apollo-angular';
 import { AuthService } from '../../core/services/auth.service';
 import { map } from 'rxjs/operators';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
@@ -21,6 +22,7 @@ import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 export class ChatService {
 
   chats$: Observable<Chat[]>;
+  private queryRef: QueryRef<AllChatsQuery>;
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -40,12 +42,41 @@ export class ChatService {
   }
 
   getUserChats(): Observable<Chat[]> {
-    return this.apollo.watchQuery<AllChatsQuery>({
+    this.queryRef = this.apollo.watchQuery<AllChatsQuery>({
       query: USER_CHATS_QUERY,
       variables: {
         loggedUserId: this.authService.authUser.id
       }
-    }).valueChanges
+    });
+
+    this.queryRef.subscribeToMore({
+      document: USER_MESSAGES_SUBSCRIPTION,
+      variables: { loggedUserId: this.authService.authUser.id },
+      updateQuery: ( previous: AllChatsQuery, { subscriptionData } ): AllChatsQuery => {
+
+        const newMessage: Message = subscriptionData.data.Message.node;
+
+        const chatToUpdateIndex: number =
+          (previous.allChats)
+          ? previous.allChats.findIndex(chat => chat.id === newMessage.chat.id )
+          : -1;
+
+        if(chatToUpdateIndex > -1) {
+          const newAllChats = [...previous.allChats];
+          const chatToUpdate: Chat = Object.assign({}, newAllChats[chatToUpdateIndex]);
+          chatToUpdate.messages = [newMessage];
+          newAllChats[chatToUpdateIndex] = chatToUpdate;
+          return {
+            ...previous,
+            allChats: newAllChats
+          }
+        }
+
+        return previous;
+      }
+    });
+
+    return this.queryRef.valueChanges
       .pipe(
         map(res => res.data.allChats),
         map((chats: Chat[]) => { // ordenando chats por javascript
