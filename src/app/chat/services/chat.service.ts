@@ -1,5 +1,9 @@
 import { Message } from './../models/message.model';
-import { USER_MESSAGES_SUBSCRIPTION, AllMessagesQuery, GET_CHAT_MESSAGES_QUERY } from './message.graphql';
+import {
+  USER_MESSAGES_SUBSCRIPTION,
+  AllMessagesQuery,
+  GET_CHAT_MESSAGES_QUERY
+} from './message.graphql';
 import { DataProxy } from 'apollo-cache';
 import { Chat } from './../models/chat.model';
 import {
@@ -7,7 +11,8 @@ import {
   USER_CHATS_QUERY,
   ChatQuery,
   CHAT_BY_ID_OR_BY_USERS_QUERY,
-  CREATE_PRIVATE_CHAT_MUTATION
+  CREATE_PRIVATE_CHAT_MUTATION,
+  USER_CHATS_SUBSCRIPTION
 } from './chat.graphql';
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
@@ -50,6 +55,23 @@ export class ChatService {
         loggedUserId: this.authService.authUser.id
       }
     });
+
+    this.queryRef.subscribeToMore({
+      document: USER_CHATS_SUBSCRIPTION,
+      variables: { loggedUserId: this.authService.authUser.id },
+      updateQuery: ( previous: AllChatsQuery, { subscriptionData } ): AllChatsQuery => {
+
+        const newChat: Chat = subscriptionData.data.Chat.node;
+
+        if(previous.allChats.every(chat => chat.id !== newChat.id)) {
+          return {
+            ...previous,
+            allChats: [newChat, ...previous.allChats]
+          };
+        }
+        return previous;
+      }
+    })
 
     this.queryRef.subscribeToMore({
       document: USER_MESSAGES_SUBSCRIPTION,
