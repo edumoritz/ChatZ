@@ -49,6 +49,7 @@ export class ChatWindowComponent extends BaseComponent<Message> implements After
   }
 
   ngOnInit(): void {
+    this.chatService.startChatsMonitoring();
     this.title.setTitle('Loaging...');
     this.subscriptions.push(
       this.route.data
