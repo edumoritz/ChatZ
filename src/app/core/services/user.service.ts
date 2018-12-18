@@ -1,7 +1,14 @@
 import { User } from './../models/user.model';
+import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ALL_USERS_QUERY, AllUsersQuery, GET_USER_BY_ID_QUERY, UserQuery } from './user.graphql';
-import { Apollo } from 'apollo-angular';
+import {
+  ALL_USERS_QUERY,
+  AllUsersQuery,
+  GET_USER_BY_ID_QUERY,
+  NEW_USERS_SUBSCRIPTION,
+  UserQuery
+} from './user.graphql';
+import { Apollo, QueryRef } from 'apollo-angular';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -10,23 +17,62 @@ import { Observable } from 'rxjs';
 })
 export class UserService {
 
+  users$: Observable<User[]>
+  private queryRef: QueryRef<AllUsersQuery>;
+  private usersSubscription: Subscription;
+
   constructor(
-    private appolo: Apollo
+    private apollo: Apollo
   ) { }
 
+  startUsersMonitoring(idToExclude: string): void {
+    if(!this.users$) {
+      this.users$ = this.allUsers(idToExclude);
+      this.usersSubscription = this.users$.subscribe();
+    }
+  }
+
+  stopUsersMonitoring(): void {
+    if(this.usersSubscription) {
+      this.usersSubscription.unsubscribe();
+      this.usersSubscription = null;
+      this.users$ = null;
+    }
+  }
+
   allUsers(idToExclude: string): Observable<User[]>{
-    return this.appolo.query<AllUsersQuery>({
-      query: ALL_USERS_QUERY,
-      variables: {
-        idToExclude: idToExclude
-      }
-    }).pipe(
-      map(res => res.data.allUsers)
-    )
+    this.queryRef = this.apollo.watchQuery<AllUsersQuery>({
+        query: ALL_USERS_QUERY,
+        variables: {
+          idToExclude: idToExclude
+        },
+        fetchPolicy: 'network-only'
+      });
+
+      this.queryRef.subscribeToMore({
+        document: NEW_USERS_SUBSCRIPTION,
+        updateQuery: (previous: AllUsersQuery, { subscriptionData }): AllUsersQuery => {
+          const newUser: User = subscriptionData.data.User.node;
+
+          return {
+            ...previous,
+            allUsers: ([newUser, ...previous.allUsers]).sort((uA, uB) => {
+              if(uA.name < uB.name) { return -1; }
+              if(uA.name > uB.name) { return 1; }
+              return 0;
+            })
+          };
+        }
+      });
+
+      return this.queryRef.valueChanges
+        .pipe(
+          map(res => res.data.allUsers)
+        );
   }
 
   getUserById(id: string): Observable<User> {
-    return this.appolo
+    return this.apollo
       .query<UserQuery>({
         query: GET_USER_BY_ID_QUERY,
         variables: { userId: id }

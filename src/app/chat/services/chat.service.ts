@@ -20,6 +20,7 @@ import { Apollo, QueryRef } from 'apollo-angular';
 import { AuthService } from '../../core/services/auth.service';
 import { map } from 'rxjs/operators';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
+import { UserService } from 'src/app/core/services/user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +34,8 @@ export class ChatService {
   constructor(
     private apollo: Apollo,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private userService: UserService
   ) { }
 
   startChatsMonitoring(): void {
@@ -43,6 +45,7 @@ export class ChatService {
       this.router.events.subscribe((event: RouterEvent) => {
         if(event instanceof NavigationEnd && !this.router.url.includes('chat')) {
           this.onDestroy();
+          this.userService.stopUsersMonitoring();
         }
       })
     }
