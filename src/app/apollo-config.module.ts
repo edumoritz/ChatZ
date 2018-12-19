@@ -2,7 +2,7 @@ import { GRAPHCOOL_CONFIG, GraphcoolConfig } from './core/providers/graphcool-co
 import { StorageKeys } from './storage-keys';
 import { NgModule, Inject } from '@angular/core';
 import { HttpClientModule, HttpHeaders } from '@angular/common/http';
-import { persistCache } from 'apollo-cache-persist';
+import { CachePersistor } from 'apollo-cache-persist';
 import { WebSocketLink } from 'apollo-link-ws';
 import { Apollo, ApolloModule } from 'apollo-angular';
 import { HttpLink, HttpLinkModule } from 'apollo-angular-link-http';
@@ -22,6 +22,7 @@ import { SubscriptionClient } from 'subscriptions-transport-ws';
 })
 export class ApolloConfigModule {
 
+  cachePersistor: CachePersistor<any>
   private subscriptionClient: SubscriptionClient;
 
   constructor(
@@ -72,12 +73,10 @@ export class ApolloConfigModule {
 
     const cache = new InMemoryCache();
 
-    persistCache({
+    this.cachePersistor = new CachePersistor({
       cache,
       storage: window.localStorage
-    }).catch(err => {
-      console.log('Error while persisting cache: ', err);
-    })
+    });
 
     apollo.create({
       link: ApolloLink.from([
