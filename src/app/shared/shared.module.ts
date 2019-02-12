@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import {
   MatCardModule,
+  MatDialogModule,
   MatToolbarModule,
   MatFormFieldModule,
   MatInputModule,
@@ -11,6 +12,7 @@ import {
   MatSnackBarModule,
   MatSlideToggleModule,
   MatListModule,
+  MatMenuModule,
   MatIconModule,
   MatLineModule,
   MatSidenavModule,
@@ -38,6 +40,7 @@ import { FromNowPipe } from './pipes/from-now.pipe';
     FormsModule,
     FromNowPipe,
     MatCardModule,
+    MatDialogModule,
     MatToolbarModule,
     MatFormFieldModule,
     MatInputModule,
@@ -45,6 +48,7 @@ import { FromNowPipe } from './pipes/from-now.pipe';
     MatIconModule,
     MatLineModule,
     MatListModule,
+    MatMenuModule,
     MatTabsModule,
     MatSidenavModule,
     MatProgressSpinnerModule,
