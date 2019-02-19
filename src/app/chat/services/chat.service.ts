@@ -12,6 +12,7 @@ import {
   ChatQuery,
   CHAT_BY_ID_OR_BY_USERS_QUERY,
   CREATE_PRIVATE_CHAT_MUTATION,
+  CREATE_GROUP_MUTATION,
   USER_CHATS_SUBSCRIPTION
 } from './chat.graphql';
 import { Injectable, OnDestroy } from '@angular/core';
@@ -214,5 +215,13 @@ export class ChatService {
     );
   }
 
-
+  createGroup(variables: {title: string, usersIds: string[]}): Observable<Chat> {
+    variables.usersIds.push(this.authService.authUser.id);
+    return this.apollo.mutate({
+      mutation: CREATE_GROUP_MUTATION,
+      variables
+    }).pipe(
+      map(res => res.data.createChat)
+    )
+  }
 }
