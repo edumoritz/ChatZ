@@ -7,12 +7,13 @@ import {
 } from './auth.graphql';
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, throwError, of } from 'rxjs';
-import { map, tap, catchError, mergeMap } from 'rxjs/operators';
+import { map, tap, catchError, mergeMap, take } from 'rxjs/operators';
 import { Apollo } from 'apollo-angular';
 import { Base64 } from 'js-base64';
 import { StorageKeys } from '../../storage-keys';
 import { Router } from '@angular/router';
 import { User } from '../models/user.model';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,8 @@ export class AuthService {
   constructor(
     private apollo: Apollo,
     private apolloConfigModule: ApolloConfigModule,
-    private router: Router
+    private router: Router,
+    private userService: UserService
   ) {
     this.isAuthenticated.subscribe(is => console.log('AuthState', is));
     this.init();
@@ -147,10 +149,19 @@ export class AuthService {
     );
   }
 
+  private setAuthUser(userId: string): void {
+    this.userService.getUserById(userId)
+      .pipe(
+        take(1),
+        tap((user: User) => this.authUser = user)
+      ).subscribe();
+  }
+
   private setAuthState(authData: {id: string, token: string, isAuthenticated: boolean}, isRefresh: boolean = false): void {
     if(authData.isAuthenticated){
       window.localStorage.setItem(StorageKeys.AUTH_TOKEN, authData.token);
       this.authUser = {id: authData.id};
+      this.setAuthUser(this.authUser.id);
       if(!isRefresh) {
         this.apolloConfigModule.closeWebSocketConnection();
       }
