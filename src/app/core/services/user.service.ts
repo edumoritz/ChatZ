@@ -6,7 +6,8 @@ import {
   AllUsersQuery,
   GET_USER_BY_ID_QUERY,
   NEW_USERS_SUBSCRIPTION,
-  UserQuery
+  UserQuery,
+  UPDATE_USER_MUTATION
 } from './user.graphql';
 import { Apollo, QueryRef } from 'apollo-angular';
 import { Injectable } from '@angular/core';
@@ -79,5 +80,18 @@ export class UserService {
       }).pipe(
         map(res => res.data.User)
       )
+  }
+
+  updateUser(user: User): Observable<User> {
+    return this.apollo.mutate({
+      mutation: UPDATE_USER_MUTATION,
+      variables: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    }).pipe(
+      map(res => res.data.updateUser)
+    )
   }
 }
