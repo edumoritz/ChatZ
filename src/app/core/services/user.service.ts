@@ -5,7 +5,7 @@ import {
   ALL_USERS_QUERY,
   AllUsersQuery,
   GET_USER_BY_ID_QUERY,
-  NEW_USERS_SUBSCRIPTION,
+  USERS_SUBSCRIPTION,
   UserQuery,
   UPDATE_USER_MUTATION
 } from './user.graphql';
@@ -51,13 +51,26 @@ export class UserService {
       });
 
       this.queryRef.subscribeToMore({
-        document: NEW_USERS_SUBSCRIPTION,
+        document: USERS_SUBSCRIPTION,
         updateQuery: (previous: AllUsersQuery, { subscriptionData }): AllUsersQuery => {
-          const newUser: User = subscriptionData.data.User.node;
+
+          const subscriptionUser: User = subscriptionData.data.User.node;
+          const newAllUsers: User[] = [ ...previous.allUsers ];
+
+          switch (subscriptionData.data.User.mutation) {
+            case 'CREATED':
+              newAllUsers.unshift(subscriptionUser);
+              break;
+            case 'UPDATED':
+              const userToUpdateIndex: number = newAllUsers.findIndex(u => u.id === subscriptionUser.id);
+              if(userToUpdateIndex > -1) {
+                newAllUsers[userToUpdateIndex] = subscriptionUser;
+              }
+          }
 
           return {
             ...previous,
-            allUsers: ([newUser, ...previous.allUsers]).sort((uA, uB) => {
+            allUsers: newAllUsers.sort((uA, uB) => {
               if(uA.name < uB.name) { return -1; }
               if(uA.name > uB.name) { return 1; }
               return 0;
