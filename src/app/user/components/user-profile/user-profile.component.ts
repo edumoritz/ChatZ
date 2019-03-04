@@ -1,4 +1,4 @@
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar, MatDialog } from '@angular/material';
 import { Component, OnInit, HostBinding } from '@angular/core';
 import { take } from 'rxjs/operators';
 
@@ -6,6 +6,7 @@ import { AuthService } from 'src/app/core/services/auth.service';
 import { ErrorService } from './../../../core/services/error.service';
 import { User } from 'src/app/core/models/user.model';
 import { UserService } from 'src/app/core/services/user.service';
+import { ImagePreviewComponent } from 'src/app/shared/components/image-preview/image-preview.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -22,6 +23,7 @@ export class UserProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private errorService: ErrorService,
+    private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private userService: UserService
   ) { }
@@ -32,6 +34,19 @@ export class UserProfileComponent implements OnInit {
 
   triggerInputFile(input: HTMLInputElement): void {
     input.click();
+  }
+
+  onSelectedImage(event: Event): void{
+    const input: HTMLInputElement = <HTMLInputElement>event.target;
+    const file: File = input.files[0];
+    const dialogRef = this.dialog.open<ImagePreviewComponent, { image: File }>(
+        ImagePreviewComponent,
+        {
+          data: { image: file },
+          panelClass: 'mat-dialog-no-padding',
+          maxHeight: '80vh'
+        }
+      )
   }
 
   onSave(): void {

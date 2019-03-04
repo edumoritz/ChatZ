@@ -23,6 +23,7 @@ import { NoRecordComponent } from './components/no-record/no-record.component';
 import { AvatarComponent } from './components/avatar/avatar.component';
 import { FromNowPipe } from './pipes/from-now.pipe';
 import { ImagePreviewComponent } from './components/image-preview/image-preview.component';
+import { ReadFilePipe } from './pipes/read-file.pipe';
 
 
 @NgModule({
@@ -30,14 +31,18 @@ import { ImagePreviewComponent } from './components/image-preview/image-preview.
     NoRecordComponent,
     AvatarComponent,
     FromNowPipe,
-    ImagePreviewComponent
+    ImagePreviewComponent,
+    ReadFilePipe
   ],
   imports: [
     CommonModule,
+    MatButtonModule,
     MatCardModule,
+    MatDialogModule,
     MatIconModule,
     MatToolbarModule
   ],
+  entryComponents: [ImagePreviewComponent],
   exports: [
     AvatarComponent,
     CommonModule,
@@ -60,7 +65,8 @@ import { ImagePreviewComponent } from './components/image-preview/image-preview.
     ReactiveFormsModule,
     NoRecordComponent,
     MatSlideToggleModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ReadFilePipe
   ]
 })
 export class SharedModule { }
