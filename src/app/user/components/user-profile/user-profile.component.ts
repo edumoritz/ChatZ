@@ -39,14 +39,24 @@ export class UserProfileComponent implements OnInit {
   onSelectedImage(event: Event): void{
     const input: HTMLInputElement = <HTMLInputElement>event.target;
     const file: File = input.files[0];
-    const dialogRef = this.dialog.open<ImagePreviewComponent, { image: File }>(
+    const dialogRef = this.dialog.open<ImagePreviewComponent, { image: File }, { canSave: boolean, selectedImage: File}>(
         ImagePreviewComponent,
         {
           data: { image: file },
           panelClass: 'mat-dialog-no-padding',
           maxHeight: '80vh'
         }
-      )
+      );
+
+      dialogRef.afterClosed()
+        .pipe(take(1))
+        .subscribe(dialogData => {
+          input.value = '';
+          console.log('Dialog closed!', dialogData);
+          if(dialogData && dialogData.canSave) {
+            console.log('Save image!')
+          }
+        })
   }
 
   onSave(): void {

@@ -16,10 +16,10 @@ export class ReadFilePipe implements PipeTransform {
           observer.next(fileReader.result as string);
           observer.complete();
         };
-        fileReader.onerror = (event: ProgressEvent) => {
+        fileReader.onerror = (event) => {
           observer.error(event);
           observer.complete();
-        }
+        };
       });
     }
     return of(null);

@@ -54,6 +54,37 @@ export const UPDATE_USER_MUTATION = gql`
   ${UserFragment}
 `;
 
+const updateUserPhotoMutation = `
+  updateUser(id: $loggedUserId, photoId: $newPhotoId) {
+    ...UserFragment
+  }
+`;
+
+const deleteFileMutation = `
+  deleteFile(id: $oldPhotoId) {
+    id
+    secret
+  }
+`;
+
+export const getUpdateUserPhotoMutation = (hasOldPhoto: boolean) => {
+  if(hasOldPhoto) {
+    return gql`
+      mutation UpdateAndDeleteUserPhoto($loggedUserId: ID!, $newPhotoId: ID!, $oldPhotoId: ID!) {
+        ${updateUserPhotoMutation}
+        ${deleteFileMutation}
+      }
+      ${UserFragment}
+    `;
+  }
+  return gql`
+    mutation UpdateAndDeleteUserPhoto($loggedUserId: ID!, $newPhotoId: ID!) {
+      ${updateUserPhotoMutation}
+    }
+    ${UserFragment}
+  `;
+};
+
 export const USERS_SUBSCRIPTION = gql`
   subscription UsersSubscription {
     User (
