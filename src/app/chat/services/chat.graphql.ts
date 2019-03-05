@@ -16,6 +16,9 @@ const ChatFragment = gql`
     title
     createdAt
     isGroup
+    photo {
+      ...FileFragment
+    }
     users(
       first: 1
       filter: {
@@ -107,11 +110,12 @@ export const CREATE_PRIVATE_CHAT_MUTATION = gql`
 `;
 
 export const CREATE_GROUP_MUTATION = gql`
-  mutation CreateGroupMutation($title: String!, $usersIds: [ID!]!, $loggedUserId: ID!){
+  mutation CreateGroupMutation($title: String!, $usersIds: [ID!]!, $loggedUserId: ID!, $photoId: ID){
     createChat(
       title: $title,
       usersIds: $usersIds,
-      isGroup: true
+      isGroup: true,
+      photoId: $photoId
     ) {
       ...ChatFragment
       ...ChatMessagesFragment

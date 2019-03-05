@@ -1,13 +1,16 @@
-import { map, take } from 'rxjs/operators';
+import { map, take, mergeMap } from 'rxjs/operators';
 import { FormGroup, FormBuilder, Validators, FormControl, FormArray } from '@angular/forms';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, of } from 'rxjs';
 
 import { User } from './../../../core/models/user.model';
 import { UserService } from 'src/app/core/services/user.service';
 import { ChatService } from '../../services/chat.service';
 import { Chat } from '../../models/chat.model';
 import { MatDialogRef, MatSnackBar } from '@angular/material';
+import { FileService } from 'src/app/core/services/file.service';
+import { ErrorService } from 'src/app/core/services/error.service';
+import { FileModel } from 'src/app/core/models/file.model';
 
 @Component({
   selector: 'app-chat-add-group',
@@ -17,13 +20,16 @@ import { MatDialogRef, MatSnackBar } from '@angular/material';
 export class ChatAddGroupComponent implements OnDestroy, OnInit {
 
   newGroupForm: FormGroup;
+  selectedImage: File;
   users$: Observable<User[]>;
   private subscriptions: Subscription[] = [];
 
   constructor(
     private chatService: ChatService,
     private fb: FormBuilder,
+    private errorService: ErrorService,
     private dialogRef: MatDialogRef<ChatAddGroupComponent>,
+    private fileService: FileService,
     private snackBar: MatSnackBar,
     private userService: UserService
   ) { }
@@ -63,18 +69,39 @@ export class ChatAddGroupComponent implements OnDestroy, OnInit {
     this.members.removeAt(index);
   }
 
-  onSubmit() {
-    const formValue = Object.assign({
-      title: this.title.value,
-      usersIds: this.members.value.map(m => m.id)
-    });
+  onSelectImage(event: Event): void {
+    const file = (<HTMLInputElement>event.target).files[0];
+    this.selectedImage = file;
+  }
 
-    this.chatService.createGroup(formValue)
-      .pipe(take(1))
-      .subscribe((chat: Chat) => {
-        this.dialogRef.close();
-        this.snackBar.open(`${chat.title} created!`, 'OK', { duration: 3000 });
-      });
+  onSubmit() {
+
+    let operation: Observable<FileModel> = of(null);
+
+    if(this.selectedImage) {
+      operation = this.fileService.upload(this.selectedImage);
+    }
+
+    let message: string;
+    operation
+      .pipe(
+        mergeMap((uploadedImage: FileModel) => {
+          const formValue = Object.assign({
+            title: this.title.value,
+            usersIds: this.members.value.map(m => m.id),
+            photoId: (uploadedImage) ? uploadedImage.id : null
+          });
+          return this.chatService.createGroup(formValue);
+        }),
+        take(1)
+      ).subscribe(
+        (chat: Chat) => message = `'${chat.title}' created!`,
+        (error) => message = this.errorService.getErrorMessage(error),
+        () => {
+          this.dialogRef.close();
+          this.snackBar.open(message, 'OK', { duration: 3000 });
+        }
+      );
   }
 
   ngOnDestroy() {

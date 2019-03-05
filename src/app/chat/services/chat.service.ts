@@ -23,6 +23,7 @@ import { map } from 'rxjs/operators';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { UserService } from 'src/app/core/services/user.service';
 import { BaseService } from 'src/app/core/services/base.service';
+import { User } from 'src/app/core/models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -154,7 +155,12 @@ export class ChatService extends BaseService {
               const valueB = (b.messages.length > 0) ? new Date(b.messages[0].createdAt).getTime() : new Date(b.createdAt).getTime();
               return valueB - valueA;
           });
-        })
+        }),
+        map(chats => chats.map(c => {
+          const chat = new Chat(c);
+          chat.users = chat.users.map(u => new User(u))
+          return chat;
+        }))
       )
   }
 
@@ -208,7 +214,7 @@ export class ChatService extends BaseService {
     );
   }
 
-  createGroup(variables: {title: string, usersIds: string[]}): Observable<Chat> {
+  createGroup(variables: {title: string, usersIds: string[], photoId: string}): Observable<Chat> {
     variables.usersIds.push(this.authService.authUser.id);
     return this.apollo.mutate({
       mutation: CREATE_GROUP_MUTATION,
@@ -224,13 +230,23 @@ export class ChatService extends BaseService {
           title: variables.title,
           createdAt: new Date().toISOString(),
           isGroup: true,
+          photo: {
+            __typename: 'File',
+            id: '',
+            secret: ''
+          },
           users: [
             {
               __typename: 'User',
               id: '',
               name: '',
               email: '',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              photo: {
+                __typename: 'File',
+                id: '',
+                secret: ''
+              }
             }
           ],
           messages: []
