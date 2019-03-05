@@ -1,3 +1,4 @@
+import { FileFragment } from './file.graphql';
 import { User } from './../models/user.model';
 import gql from 'graphql-tag';
 
@@ -15,7 +16,11 @@ const UserFragment = gql`
     name
     email
     createdAt
+    photo {
+      ...FileFragment
+    }
   }
+  ${FileFragment}
 `;
 
 export const ALL_USERS_QUERY = gql`

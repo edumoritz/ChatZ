@@ -11,6 +11,7 @@ import { Apollo } from 'apollo-angular';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DataProxy } from 'apollo-cache';
+import { User } from 'src/app/core/models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +33,12 @@ export class MessageService extends BaseService {
       fetchPolicy: 'network-only'
     }).valueChanges
       .pipe(
-        map(res => res.data.allMessages)
+        map(res => res.data.allMessages),
+        map(messages => messages.map(m => {
+          const message = Object.assign({}, m);
+          message.sender = new User(message.sender);
+          return message;
+        }))
       )
   }
 
