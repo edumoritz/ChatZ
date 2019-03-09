@@ -52,8 +52,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    console.log(this.loginForm.value);
-
     this.configs.isLoading = true;
 
     const operation =
@@ -70,7 +68,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.authService.setRememberMe(this.loginForm.value); // salva info ususario
           //se tiver url no authservice utiliza senao retorna dashboard
           const redirect: string = this.authService.redirectUrl || '/dashboard';
-          console.log('redirecting...', redirect);
 
           this.authService.isAuthenticated
             .pipe(takeWhile(() => this.alive))
@@ -86,8 +83,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           console.log(err);
           this.configs.isLoading = false;
           this.snackBar.open(this.errorService.getErrorMessage(err), 'Done', {duration: 5000, verticalPosition: 'top'});
-        },
-        () => console.log('Observable Completed!')
+        }
       );
   }
 
